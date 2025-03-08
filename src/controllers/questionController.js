@@ -12,8 +12,17 @@ const getQuestion = async (req, res) => {
 }
 
 const createQuestion = async (req, res) => {
-    const { idUser, postTitle, postDetail, imgDetail, imgTryExpect } = req.body;
-    const data = await handleCreateQuestion(idUser, 1, postTitle, postDetail, imgDetail, imgTryExpect);
+    if (req?.file) {
+        if (!req.file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF)$/)) {
+            return res.status(200).json({
+                EC: 1,
+                EM: 'Only image files (jpg, jpeg, png) are allowed!'
+            });
+        };
+    }
+    const image = req?.file?.filename ?? null;
+    const { idUser, postTitle, postDetail } = req.body;
+    const data = await handleCreateQuestion(idUser, 1, postTitle, postDetail, image);
     return res.status(200).json(data);
 }
 

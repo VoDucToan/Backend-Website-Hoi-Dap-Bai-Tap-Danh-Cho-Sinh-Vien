@@ -15,9 +15,10 @@ const handleGetQuestion = async (idQuestion) => {
     };
 }
 
-const handleCreateQuestion = async (idUser, idPostType, postTitle, postDetail, imgDetail, imgTryExpect) => {
-    let [results, fields] = await connection.query(`INSERT INTO post (created_by_user_id, post_type_id, post_title, post_details, image_detail, image_try_expect)
-                                                    VALUES (${idUser}, ${idPostType}, N'${postTitle}', N'${postDetail}', '${imgDetail}', '${imgTryExpect}')`);
+const handleCreateQuestion = async (idUser, idPostType, postTitle, postDetail, postImage) => {
+    let [results] = await connection.query(`INSERT INTO post (created_by_user_id, post_type_id, post_title, post_details, post_image)
+                                                    VALUES (${idUser}, ${idPostType}, N'${postTitle}', N'${postDetail}', N'${postImage}')`);
+    console.log('result id', results.insertId);
     return {
         EC: 0,
         EM: "Create question succeed",

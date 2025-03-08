@@ -5,7 +5,14 @@ const auth = (req, res, next) => {
     const white_lists = [
         "/register",
         "/login",
-        "/number-vote-for-post/\\d{1,}"
+        "/number-vote-for-post/\\d{1,}",
+        "/list-questions",
+        "/list-tags-by-question/\\d{1,}",
+        "/number-answers/\\d{1,}",
+        "/user/\\d{1,}",
+        "/list-comments/\\d{1,}",
+        "/list-answers/\\d{1,}",
+        "/question/\\d{1,}"
     ];
     const isWhitelisted = white_lists.some((pattern) => new RegExp('^' + '/api/v1' + pattern + '$').test(req.originalUrl));
     if (isWhitelisted) {

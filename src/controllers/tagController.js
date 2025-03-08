@@ -1,4 +1,4 @@
-const { handleGetTagsByQuestion, handleGetListTags } = require("../services/tagService");
+const { handleGetTagsByQuestion, handleGetListTags, handleInsertTagsQuestion } = require("../services/tagService");
 
 const getTagsByQuestion = async (req, res) => {
     let idQuestion = req.params.idquestion;
@@ -15,4 +15,10 @@ const getListTags = async (req, res) => {
     return res.status(200).json(tags);
 }
 
-module.exports = { getTagsByQuestion, getListTags }
+const insertTagsQuestion = async (req, res) => {
+    const { listIdTags, idQuestion } = req.body;
+    const data = await handleInsertTagsQuestion(idQuestion, listIdTags)
+    return res.status(200).json(data);
+}
+
+module.exports = { getTagsByQuestion, getListTags, insertTagsQuestion }

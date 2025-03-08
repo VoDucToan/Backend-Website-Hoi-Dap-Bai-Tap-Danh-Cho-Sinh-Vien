@@ -14,4 +14,23 @@ const handleGetListTags = async () => {
     return results;
 }
 
-module.exports = { handleGetTagsByQuestion, handleGetListTags };
+const handleInsertTagsQuestion = async (idQuestion, listIdTags) => {
+    try {
+        for (let i = 0; i < listIdTags.length; i++) {
+            let [results, fields] = await connection.query(`INSERT INTO post_tag (post_id, tag_id)
+                                                            VALUES (${idQuestion}, ${listIdTags[i]})`);
+            console.log('result', results);
+        }
+        return {
+            EC: 0,
+            EM: "Insert tags for question succeed",
+        };
+    } catch (error) {
+        return {
+            EC: 1,
+            EM: error.message,
+        };
+    }
+}
+
+module.exports = { handleGetTagsByQuestion, handleGetListTags, handleInsertTagsQuestion };

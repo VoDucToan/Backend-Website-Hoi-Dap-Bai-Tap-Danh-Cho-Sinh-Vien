@@ -46,6 +46,7 @@ const handleLoginUser = async (email_address, password) => {
                 EM: "Login succeed",
                 DT: {
                     access_token,
+                    id: user[0].id,
                     email: email_address,
                     name: user[0].display_name
                 }
