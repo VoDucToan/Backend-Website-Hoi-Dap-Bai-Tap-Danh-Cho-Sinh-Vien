@@ -32,7 +32,7 @@ app.use(cookieParser(process.env.COOKIE_SECRET));
 
 //config cors
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: process.env.URL_REACT,
     optionsSuccessStatus: 200,
     credentials: true,
 }))
