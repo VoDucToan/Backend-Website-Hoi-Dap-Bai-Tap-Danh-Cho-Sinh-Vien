@@ -1,0 +1,57 @@
+const Comment = require('../models/Comment');
+const Post_Tag = require('../models/Post_Tag');
+const Post_Type = require('../models/Post_Type');
+const Post = require('../models/Post');
+const Tag = require('../models/Tag');
+const User = require('../models/User');
+const Vote_Comment = require('../models/Vote_Comment');
+const Vote_Post = require('../models/Vote_Post');
+const Vote_Type = require('../models/Vote_Type');
+const Image_Post = require('../models/Image_Post');
+const Role = require('../models/Role');
+const Edit_Post = require('../models/Edit_Post');
+const Image_Edit_Post = require('../models/Image_Edit_Post');
+const Edit_Post_Tag = require('../models/Edit_Post_Tag');
+const sequelize = require('../config/connectDB');
+const { DataTypes } = require('sequelize');
+const Image_Tag = require('../models/Image_Tag');
+const Notification = require('../models/Notification');
+const Edit_Tag = require('../models/Edit_Tag');
+const Image_Edit_Tag = require('../models/Image_Edit_Tag');
+const List_Save = require('../models/List_Save');
+const Item_Save = require('../models/Item_Save');
+const Follow = require('../models/Follow');
+const Privilege = require('../models/Privilege');
+const User_Privilege = require('../models/User_Privilege');
+
+const modelSync = async () => {
+    // Post.hasMany(Post, { sourceKey: 'id', foreignKey: 'parent_question_id' });
+    // Post.belongsTo(Post, { targetKey: 'id', foreignKey: 'parent_question_id' });
+    // Post.hasOne(Post, { sourceKey: 'id', foreignKey: 'accepted_answer_id' });
+    // Post.belongsTo(Post, { targetKey: 'id', foreignKey: 'accepted_answer_id' });
+    await Role.sync();
+    await User.sync({ alter: true });
+    await Privilege.sync({ alter: true });
+    await User_Privilege.sync({ alter: true });
+    await Post_Type.sync({ force: true });
+    await Post.sync({ alter: true });
+    await Follow.sync({ alter: true });
+    await Comment.sync({ force: true });
+    await Vote_Type.sync({ force: true });
+    await Vote_Post.sync({ force: true });
+    await Vote_Comment.sync({ force: true });
+    await Tag.sync({ alter: true });
+    await Image_Tag.sync({ alter: true });
+    await Post_Tag.sync({ force: true });
+    await Image_Post.sync({ alter: true });
+    await List_Save.sync({ alter: true });
+    await Item_Save.sync();
+    await Edit_Post.sync({ alter: true });
+    await Image_Edit_Post.sync({ alter: true });
+    await Edit_Post_Tag.sync({ alter: true });
+    await Edit_Tag.sync({ alter: true });
+    await Image_Edit_Tag.sync({ alter: true });
+    await Notification.sync({ alter: true });
+}
+
+module.exports = modelSync;

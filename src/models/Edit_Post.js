@@ -1,0 +1,64 @@
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/connectDB');
+const User = require('./User');
+const Post = require('./Post');
+const Post_Type = require('./Post_Type');
+
+const Edit_Post = sequelize.define(
+    'Edit_Post',
+    {
+        id: {
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
+            primaryKey: true
+        },
+        previous_edit_id: {
+            type: DataTypes.INTEGER,
+        },
+        edited_by_user_id: {
+            type: DataTypes.INTEGER,
+            references: {
+                model: User,
+                key: 'id',
+            },
+        },
+        post_id: {
+            type: DataTypes.INTEGER,
+            references: {
+                model: Post,
+                key: 'id',
+            },
+        },
+        post_title: {
+            type: DataTypes.STRING(1000),
+        },
+        post_details: {
+            type: DataTypes.STRING(10000),
+        },
+        post_plain_details: {
+            type: DataTypes.STRING,
+        },
+        edit_summary: {
+            type: DataTypes.STRING(1000),
+        },
+        edit_status: {
+            type: DataTypes.INTEGER,
+            defaultValue: 0,
+        },
+        edit_post_type_id: {
+            type: DataTypes.INTEGER,
+            references: {
+                model: Post_Type,
+                key: 'id',
+            },
+        },
+    },
+    {
+        tableName: 'Edit_Post',
+    },
+);
+
+Edit_Post.hasMany(Edit_Post, { sourceKey: 'id', foreignKey: 'previous_edit_id' });
+Edit_Post.belongsTo(Edit_Post, { targetKey: 'id', foreignKey: 'previous_edit_id' });
+
+module.exports = Edit_Post;

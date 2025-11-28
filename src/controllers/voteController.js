@@ -3,7 +3,12 @@ const { handleIncreaseVoteForPost, handleUnvoteForPost, handleGetVoteTypeForPost
     handleGetNumberVoteForComment,
     handleIncreaseVoteForComment,
     handleUnvoteForComment,
-    handleGetVoteTypeForComment } = require("../services/voteService");
+    handleGetVoteTypeForComment,
+    handleDeleteVotePost,
+    handleUpVoteForPost,
+    handleDownVoteForPost,
+    handleGetVotePostsByUser,
+    handleGetVotePostsByUserPagination } = require("../services/voteService");
 
 const getNumberVoteForPost = async (req, res) => {
     let idPost = req.params.idpost;
@@ -46,8 +51,8 @@ const getNumberVoteForComment = async (req, res) => {
 }
 
 const increaseVoteForComment = async (req, res) => {
-    const { idComment, idUser, idVoteType } = req.body;
-    const data = await handleIncreaseVoteForComment(idComment, idUser, idVoteType);
+    const { idComment, idUser } = req.body;
+    const data = await handleIncreaseVoteForComment(idComment, idUser);
     return res.status(200).json(data);
 }
 
@@ -63,8 +68,41 @@ const getVoteTypeForComment = async (req, res) => {
     return res.status(200).json(data);
 }
 
+const deleteVotePost = async (req, res) => {
+    const { idpost } = req.params;
+    const data = await handleDeleteVotePost(idpost);
+    return res.status(200).json(data);
+}
+
+const upVoteForPost = async (req, res) => {
+    const { idPost, idUser } = req.body;
+    const data = await handleUpVoteForPost(idPost, idUser);
+    return res.status(200).json(data);
+}
+
+const downVoteForPost = async (req, res) => {
+    const { idPost, idUser } = req.body;
+    const data = await handleDownVoteForPost(idPost, idUser);
+    return res.status(200).json(data);
+}
+
+
+const getVotePostsByUser = async (req, res) => {
+    const { idUser } = req.params;
+    const { page, limit } = req.query;
+    if (+page && +limit) {
+        const data = await handleGetVotePostsByUserPagination(+page, +limit, idUser);
+        return res.status(200).json(data);
+    }
+    else {
+        const data = await handleGetVotePostsByUser(idUser);
+        return res.status(200).json(data);
+    }
+}
+
 module.exports = {
     increaseVoteForPost, getNumberVoteForPost, unvoteForPost,
     getVoteTypeForPost, decreaseVoteForPost, getNumberVoteForComment,
-    increaseVoteForComment, unvoteForComment, getVoteTypeForComment
+    increaseVoteForComment, unvoteForComment, getVoteTypeForComment,
+    deleteVotePost, upVoteForPost, downVoteForPost, getVotePostsByUser
 };
