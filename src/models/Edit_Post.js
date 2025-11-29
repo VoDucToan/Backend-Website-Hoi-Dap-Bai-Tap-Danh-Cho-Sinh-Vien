@@ -33,10 +33,10 @@ const Edit_Post = sequelize.define(
             type: DataTypes.STRING(1000),
         },
         post_details: {
-            type: DataTypes.STRING(10000),
+            type: DataTypes.TEXT('medium'),
         },
         post_plain_details: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT('medium'),
         },
         edit_summary: {
             type: DataTypes.STRING(1000),

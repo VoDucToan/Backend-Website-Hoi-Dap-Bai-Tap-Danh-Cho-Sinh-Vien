@@ -22,10 +22,10 @@ const Tag = sequelize.define(
             type: DataTypes.STRING,
         },
         tag_summary: {
-            type: DataTypes.STRING(1000),
+            type: DataTypes.TEXT('medium'),
         },
         tag_description: {
-            type: DataTypes.STRING(10000),
+            type: DataTypes.TEXT('medium'),
         },
         tag_status: {
             type: DataTypes.BOOLEAN,

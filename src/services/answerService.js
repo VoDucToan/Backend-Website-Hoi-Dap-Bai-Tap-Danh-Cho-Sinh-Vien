@@ -654,8 +654,10 @@ const handleGetAnswersPagination = async (page, limit) => {
             FROM user
             INNER JOIN post ON post.created_by_user_id = user.id
             WHERE post.post_type_id=2 
+            ORDER BY post.updatedAt DESC, post.id DESC
             LIMIT ${limit} 
-            OFFSET ${offset}`);
+            OFFSET ${offset}
+            `);
 
         const formattedDataAnswers = dataAnswers.map(item => {
             item.answeredTime = dayjs(item.createdAt).format('D MMM, YYYY [a]t H:mm');
@@ -668,7 +670,7 @@ const handleGetAnswersPagination = async (page, limit) => {
         const count = await Post.count({
             where: {
                 post_type_id: 2,
-            }
+            },
         });
         const totalPages = Math.ceil(count / limit);
 
