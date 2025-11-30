@@ -79,8 +79,8 @@ const handleGetListQuestionsPagination = async (page, limit, postStatus, noAnswe
             if (noAnswers) {
                 subQuery.push(sequelize.literal(`
                     NOT EXISTS (
-                        SELECT 1 FROM Post p2
-                        WHERE p2.parent_question_id = Post.id
+                        SELECT 1 FROM post p2
+                        WHERE p2.parent_question_id = post.id
                           AND p2.post_type_id = 2
                           AND p2.post_status = TRUE
                     )
@@ -105,7 +105,7 @@ const handleGetListQuestionsPagination = async (page, limit, postStatus, noAnswe
                              ELSE 0 END
                         ), 0)
                         FROM vote_post vp
-                        WHERE vp.post_id = Post.id
+                        WHERE vp.post_id = post.id
                         ) <= 0 
                 `));
             }
@@ -213,14 +213,14 @@ const handleGetListQuestionsPagination = async (page, limit, postStatus, noAnswe
                     SELECT 
                         IFNULL(SUM(CASE WHEN vote_type_id = 1 THEN 1 WHEN vote_type_id = 2 THEN -1 ELSE 0 END), 0)
                     FROM vote_post
-                    WHERE vote_post.post_id = Post.id
+                    WHERE vote_post.post_id = post.id
                     )`),
                         'voteCount'
                     ],
                     [
                         sequelize.literal(`(
-                            SELECT COUNT(*) FROM Post p2
-                            WHERE p2.parent_question_id = Post.id
+                            SELECT COUNT(*) FROM post p2
+                            WHERE p2.parent_question_id = post.id
                             AND p2.post_type_id = 2
                             AND p2.post_status = TRUE
                     )`),

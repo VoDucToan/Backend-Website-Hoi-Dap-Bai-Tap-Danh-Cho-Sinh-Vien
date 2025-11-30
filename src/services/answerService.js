@@ -107,7 +107,7 @@ const handleGetListAnswersPagination = async (idQuestion, page, limit, typeOrder
                     SELECT 
                         IFNULL(SUM(CASE WHEN vote_type_id = 1 THEN 1 WHEN vote_type_id = 2 THEN -1 ELSE 0 END), 0)
                     FROM vote_post
-                    WHERE vote_post.post_id = Post.id
+                    WHERE vote_post.post_id = post.id
                     )`),
                         'voteCount'
                     ]
@@ -650,7 +650,7 @@ const handleGetAnswersPagination = async (page, limit) => {
                 (SELECT IFNULL(SUM(CASE WHEN vote_type_id = 1 THEN 1 
                     WHEN vote_type_id = 2 THEN -1 ELSE 0 END), 0)
                 FROM vote_post
-                WHERE vote_post.post_id = Post.id) AS voteCount
+                WHERE vote_post.post_id = post.id) AS voteCount
             FROM user
             INNER JOIN post ON post.created_by_user_id = user.id
             WHERE post.post_type_id=2 
