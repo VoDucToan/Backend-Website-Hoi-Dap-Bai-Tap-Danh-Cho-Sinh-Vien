@@ -53,6 +53,7 @@ const modelSync = async () => {
     await Edit_Tag.sync({ alter: true });
     await Image_Edit_Tag.sync({ alter: true });
     await Notification.sync({ alter: true });
+
 }
 
 module.exports = modelSync;

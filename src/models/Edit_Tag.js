@@ -48,7 +48,7 @@ const Edit_Tag = sequelize.define(
         },
     },
     {
-        tableName: 'Edit_Tag',
+        tableName: 'edit_tag',
     },
 );
 

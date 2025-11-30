@@ -27,7 +27,7 @@ const Follow = sequelize.define(
         },
     },
     {
-        tableName: 'Follow',
+        tableName: 'follow',
     },
 );
 

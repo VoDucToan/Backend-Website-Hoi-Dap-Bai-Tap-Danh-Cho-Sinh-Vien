@@ -54,7 +54,7 @@ const Edit_Post = sequelize.define(
         },
     },
     {
-        tableName: 'Edit_Post',
+        tableName: 'edit_post',
     },
 );
 

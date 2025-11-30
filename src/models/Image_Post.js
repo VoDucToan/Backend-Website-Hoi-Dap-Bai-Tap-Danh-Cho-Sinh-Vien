@@ -22,7 +22,7 @@ const Image_Post = sequelize.define(
         },
     },
     {
-        tableName: 'Image_Post',
+        tableName: 'image_post',
     },
 );
 

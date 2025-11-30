@@ -29,7 +29,7 @@ const User_Privilege = sequelize.define(
         },
     },
     {
-        tableName: 'User_Privilege',
+        tableName: 'user_privilege',
     },
 );
 

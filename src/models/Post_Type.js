@@ -14,7 +14,7 @@ const Post_Type = sequelize.define(
         },
     },
     {
-        tableName: 'Post_Type',
+        tableName: 'post_type',
     },
 );
 

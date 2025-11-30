@@ -22,7 +22,7 @@ const Edit_Post_Tag = sequelize.define(
         },
     },
     {
-        tableName: 'Edit_Post_Tag',
+        tableName: 'edit_post_tag',
     },
 );
 

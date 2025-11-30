@@ -46,7 +46,7 @@ const Post = sequelize.define(
         },
     },
     {
-        tableName: 'Post',
+        tableName: 'post',
         indexes: [
             {
                 type: "FULLTEXT",

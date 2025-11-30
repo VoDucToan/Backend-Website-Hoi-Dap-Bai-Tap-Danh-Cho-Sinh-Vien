@@ -22,7 +22,7 @@ const List_Save = sequelize.define(
         },
     },
     {
-        tableName: 'List_Save',
+        tableName: 'list_save',
     },
 );
 

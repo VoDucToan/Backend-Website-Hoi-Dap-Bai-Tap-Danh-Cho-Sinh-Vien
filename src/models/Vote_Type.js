@@ -14,7 +14,7 @@ const Vote_Type = sequelize.define(
         },
     },
     {
-        tableName: 'Vote_Type',
+        tableName: 'vote_type',
     },
 );
 

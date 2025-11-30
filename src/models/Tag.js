@@ -33,7 +33,7 @@ const Tag = sequelize.define(
         },
     },
     {
-        tableName: 'Tag',
+        tableName: 'tag',
     },
 );
 

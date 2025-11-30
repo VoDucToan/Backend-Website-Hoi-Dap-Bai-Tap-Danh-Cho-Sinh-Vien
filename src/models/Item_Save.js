@@ -30,7 +30,7 @@ const Item_Save = sequelize.define(
         },
     },
     {
-        tableName: 'Item_Save',
+        tableName: 'item_save',
     },
 );
 

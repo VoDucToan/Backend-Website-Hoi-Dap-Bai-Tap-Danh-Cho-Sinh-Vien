@@ -35,7 +35,7 @@ const Vote_Post = sequelize.define(
         },
     },
     {
-        tableName: 'Vote_Post',
+        tableName: 'vote_post',
     },
 );
 
