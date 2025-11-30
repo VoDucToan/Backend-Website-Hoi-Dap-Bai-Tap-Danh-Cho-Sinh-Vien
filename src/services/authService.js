@@ -40,7 +40,9 @@ const handleCreateUser = async (display_name, email_address, password) => {
             await user.save();
             // Send the vertification token to the user's email
             const transporter = nodemailer.createTransport({
-                service: 'gmail',
+                host: "smtp.gmail.com",
+                port: 465,
+                secure: true,
                 auth: {
                     user: 'chututmusic@gmail.com',
                     pass: 'mwfl repn ehlq tond',
@@ -50,7 +52,7 @@ const handleCreateUser = async (display_name, email_address, password) => {
                 from: 'chututmusic@gmail.com',
                 to: email_address,
                 subject: 'Verify Email',
-                text: `Click the following link to verify your email: http://localhost:3000/verify-email/${token}`, //link ở front end
+                text: `Click the following link to verify your email: ${process.env.URL_REACT}/verify-email/${token}`, //link ở front end
             };
             transporter.sendMail(mailOptions, (error, info) => {
                 if (error) {
