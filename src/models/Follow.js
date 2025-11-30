@@ -4,7 +4,7 @@ const User = require('./User');
 const Post = require('./Post');
 
 const Follow = sequelize.define(
-    'Follow',
+    'follow',
     {
         id: {
             type: DataTypes.INTEGER,

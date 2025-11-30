@@ -6,7 +6,7 @@ const Post_Type = require('./Post_Type');
 const Tag = require('./Tag');
 
 const Edit_Tag = sequelize.define(
-    'Edit_Tag',
+    'edit_tag',
     {
         id: {
             type: DataTypes.INTEGER,

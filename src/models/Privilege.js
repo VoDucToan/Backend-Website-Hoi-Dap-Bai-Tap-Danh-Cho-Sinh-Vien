@@ -3,7 +3,7 @@ const sequelize = require('../config/connectDB');
 const Role = require('./Role');
 
 const Privilege = sequelize.define(
-    'Privilege',
+    'privilege',
     {
         id: {
             type: DataTypes.INTEGER,

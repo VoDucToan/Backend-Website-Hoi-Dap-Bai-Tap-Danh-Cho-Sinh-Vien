@@ -6,7 +6,7 @@ const Vote_Type = require('./Vote_Type');
 const Privilege = require('./Privilege');
 
 const User_Privilege = sequelize.define(
-    'User_Privilege',
+    'user_privilege',
     {
         id: {
             type: DataTypes.INTEGER,

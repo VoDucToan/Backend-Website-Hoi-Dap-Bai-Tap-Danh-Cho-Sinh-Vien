@@ -3,7 +3,7 @@ const sequelize = require('../config/connectDB');
 const User = require('./User');
 
 const List_Save = sequelize.define(
-    'List_Save',
+    'list_save',
     {
         id: {
             type: DataTypes.INTEGER,

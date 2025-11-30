@@ -5,7 +5,7 @@ const Vote_Type = require('./Vote_Type');
 const Comment = require('./Comment');
 
 const Vote_Comment = sequelize.define(
-    'Vote_Comment',
+    'vote_comment',
     {
         id: {
             type: DataTypes.INTEGER,

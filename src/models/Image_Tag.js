@@ -4,7 +4,7 @@ const Post = require('./Post');
 const Tag = require('./Tag');
 
 const Image_Tag = sequelize.define(
-    'Image_Tag',
+    'image_tag',
     {
         id: {
             type: DataTypes.INTEGER,

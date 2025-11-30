@@ -3,7 +3,7 @@ const sequelize = require('../config/connectDB');
 const Role = require('./Role');
 
 const User = sequelize.define(
-    'User',
+    'user',
     {
         id: {
             type: DataTypes.INTEGER,

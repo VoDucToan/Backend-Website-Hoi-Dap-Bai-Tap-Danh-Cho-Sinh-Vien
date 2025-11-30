@@ -4,7 +4,7 @@ const User = require('./User');
 const Post = require('./Post');
 
 const Comment = sequelize.define(
-    'Comment',
+    'comment',
     {
         id: {
             type: DataTypes.INTEGER,

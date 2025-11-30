@@ -3,7 +3,7 @@ const sequelize = require('../config/connectDB');
 const Edit = require('./Edit_Post');
 
 const Image_Edit_Post = sequelize.define(
-    'Image_Edit_Post',
+    'image_edit_post',
     {
         id: {
             type: DataTypes.INTEGER,

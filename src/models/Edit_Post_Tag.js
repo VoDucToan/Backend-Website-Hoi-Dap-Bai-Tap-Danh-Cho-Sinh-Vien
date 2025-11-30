@@ -4,7 +4,7 @@ const Tag = require('./Tag');
 const Edit = require('./Edit_Post');
 
 const Edit_Post_Tag = sequelize.define(
-    'Edit_Post_Tag',
+    'edit_post_tag',
     {
         edit_id: {
             type: DataTypes.INTEGER,

@@ -4,7 +4,7 @@ const List_Save = require('./List_Save');
 const Post = require('./Post');
 
 const Item_Save = sequelize.define(
-    'Item_Save',
+    'item_save',
     {
         id: {
             type: DataTypes.INTEGER,

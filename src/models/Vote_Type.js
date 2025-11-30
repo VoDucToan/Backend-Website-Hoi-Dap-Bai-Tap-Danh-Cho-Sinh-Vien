@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/connectDB');
 
 const Vote_Type = sequelize.define(
-    'Vote_Type',
+    'vote_type',
     {
         id: {
             type: DataTypes.INTEGER,
