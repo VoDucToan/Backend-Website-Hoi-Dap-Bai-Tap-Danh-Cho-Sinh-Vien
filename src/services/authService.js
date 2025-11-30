@@ -39,17 +39,18 @@ const handleCreateUser = async (display_name, email_address, password) => {
             user.verify_token = token;
             await user.save();
             // Send the vertification token to the user's email
+
             const transporter = nodemailer.createTransport({
-                host: "smtp.gmail.com",
+                host: "smtp-relay.brevo.com",
                 port: 587,
                 secure: false,
                 auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS,
+                    user: process.env.BREVO_USER,
+                    pass: process.env.BREVO_KEY,
                 },
             });
             const mailOptions = {
-                from: process.env.EMAIL_USER,
+                from: `Hỏi Đáp UTE <${process.env.EMAIL_USER}>`,
                 to: email_address,
                 subject: 'Verify Email',
                 text: `Click the following link to verify your email: ${process.env.URL_REACT}/verify-email/${token}`, //link ở front end
