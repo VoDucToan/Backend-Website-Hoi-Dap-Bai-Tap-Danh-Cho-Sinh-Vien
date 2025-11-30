@@ -44,12 +44,12 @@ const handleCreateUser = async (display_name, email_address, password) => {
                 port: 465,
                 secure: true,
                 auth: {
-                    user: 'chututmusic@gmail.com',
-                    pass: 'mwfl repn ehlq tond',
+                    user: process.env.EMAIL_USER,
+                    pass: process.env.EMAIL_PASS,
                 },
             });
             const mailOptions = {
-                from: 'chututmusic@gmail.com',
+                from: process.env.EMAIL_USER,
                 to: email_address,
                 subject: 'Verify Email',
                 text: `Click the following link to verify your email: ${process.env.URL_REACT}/verify-email/${token}`, //link ở front end
