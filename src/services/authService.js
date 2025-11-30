@@ -9,6 +9,7 @@ const User = require('../models/User');
 const ms = require('ms');
 const { handleCreateListSave } = require('./listSaveService');
 const isDev = process.env.NODE_ENV === 'development';
+const Brevo = require("@getbrevo/brevo");
 
 const handleCreateUser = async (display_name, email_address, password) => {
     try {
@@ -40,31 +41,44 @@ const handleCreateUser = async (display_name, email_address, password) => {
             await user.save();
             // Send the vertification token to the user's email
 
-            const transporter = nodemailer.createTransport({
-                host: "smtp-relay.brevo.com",
-                port: 587,
-                secure: false,
-                auth: {
-                    user: process.env.BREVO_USER,
-                    pass: process.env.BREVO_KEY,
-                },
-            });
-            const mailOptions = {
-                from: `Hỏi Đáp UTE <${process.env.EMAIL_USER}>`,
-                to: email_address,
-                subject: 'Verify Email',
-                text: `Click the following link to verify your email: ${process.env.URL_REACT}/verify-email/${token}`, //link ở front end
-            };
-            transporter.sendMail(mailOptions, (error, info) => {
-                if (error) {
-                    console.log(error);
-                    return {
-                        EC: 2,
-                        EM: "Error sending email",
-                    };
-                } else {
-                    console.log(`Email sent: ${info.response}`);
-                }
+            // const transporter = nodemailer.createTransport({
+            //     host: "smtp-relay.brevo.com",
+            //     port: 587,
+            //     secure: false,
+            //     auth: {
+            //         user: process.env.BREVO_USER,
+            //         pass: process.env.BREVO_KEY,
+            //     },
+            // });
+            // const mailOptions = {
+            //     from: `Hỏi Đáp UTE <${process.env.EMAIL_USER}>`,
+            //     to: email_address,
+            //     subject: 'Verify Email',
+            //     text: `Click the following link to verify your email: ${process.env.URL_REACT}/verify-email/${token}`, //link ở front end
+            // };
+            // transporter.sendMail(mailOptions, (error, info) => {
+            //     if (error) {
+            //         console.log(error);
+            //         return {
+            //             EC: 2,
+            //             EM: "Error sending email",
+            //         };
+            //     } else {
+            //         console.log(`Email sent: ${info.response}`);
+            //     }
+            // });
+
+            const apiInstance = new Brevo.TransactionalEmailsApi();
+            apiInstance.setApiKey(
+                Brevo.TransactionalEmailsApiApiKeys.apiKey,
+                process.env.BREVO_API_KEY
+            );
+
+            await apiInstance.sendTransacEmail({
+                sender: { email: process.env.EMAIL_USER, name: "Hỏi Đáp UTE" },
+                to: [{ email: email_address }],
+                subject: "Verify Email",
+                textContent: `Click the link: ${process.env.URL_REACT}/verify-email/${token}`
             });
 
             return {
@@ -79,6 +93,7 @@ const handleCreateUser = async (display_name, email_address, password) => {
             };
         }
     } catch (error) {
+        console.log('error', error);
         return {
             EC: 3,
             EM: error.message,
