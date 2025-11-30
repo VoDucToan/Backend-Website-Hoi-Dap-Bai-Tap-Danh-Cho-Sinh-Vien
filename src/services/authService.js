@@ -138,6 +138,7 @@ const handleLoginUser = async (email_address, password, res) => {
             res.cookie("refreshToken", refresh_token, {
                 httpOnly: true,
                 secure: !isDev,
+                sameSite: "none",
                 signed: true,
                 expires: new Date(Date.now() + ms(process.env.REFRESH_TOKEN_LIFE)),
             });
@@ -244,6 +245,7 @@ const handleLogout = async (req, res) => {
         res.clearCookie('refreshToken', {
             httpOnly: true,
             secure: !isDev,
+            sameSite: "none",
             signed: true,
         });
         return {
