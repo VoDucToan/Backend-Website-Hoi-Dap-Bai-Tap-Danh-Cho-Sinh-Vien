@@ -8,6 +8,6 @@ const router = express.Router();
 // router.all('*', auth);
 
 router.get('/post-type/:idpost', auth, getPostType);
-router.get('/search-posts', auth, searchPosts);
+router.get('/search-posts', searchPosts);
 
 module.exports = router;
