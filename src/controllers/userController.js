@@ -33,11 +33,13 @@ const updateUser = async (req, res) => {
     //     image = req.file.filename;
     // }
 
-    let image = null;
-    if (req?.file?.path) {
-        const result = await cloudinary.uploader.upload(req.file.path);
-        image = result.secure_url;
-    }
+    // let image = null;
+    // if (req?.file?.path) {
+    //     const result = await cloudinary.uploader.upload(req.file.path);
+    //     image = result.secure_url;
+    // }
+
+    const image = req?.file?.path;
 
     const { idUser, idRole, userName, locationUser, aboutMe, reputation } = req.body;
     const data = await handleUpdateUser(idUser, idRole, userName, locationUser, aboutMe, image, reputation);

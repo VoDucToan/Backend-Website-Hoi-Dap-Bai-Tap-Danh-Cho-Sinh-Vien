@@ -21,16 +21,20 @@ const editPost = async (req, res) => {
     //     })
     // }
 
-    const limit = pLimit(5);
-    const imagesToUpload = req.files.map((file) => {
-        return limit(async () => {
-            const result = await cloudinary.uploader.upload(file.path);
-            return result;
-        })
-    })
+    // const limit = pLimit(5);
+    // const imagesToUpload = req.files.map((file) => {
+    //     return limit(async () => {
+    //         const result = await cloudinary.uploader.upload(file.path);
+    //         return result;
+    //     })
+    // })
 
-    const uploads = await Promise.all(imagesToUpload);
-    const images = uploads.map(image => image.secure_url);
+    // const uploads = await Promise.all(imagesToUpload);
+    // const images = uploads.map(image => image.secure_url);
+
+    const images = req?.files?.map((file) => {
+        return file.path;
+    })
 
     const { idUser, idPost, titlePost, detailPost, postPlainDetail, editSummary, listIdTags, previousEditId } = req.body;
 
@@ -108,16 +112,20 @@ const updateEditPost = async (req, res) => {
     //     })
     // }
 
-    const limit = pLimit(5);
-    const imagesToUpload = req.files.map((file) => {
-        return limit(async () => {
-            const result = await cloudinary.uploader.upload(file.path);
-            return result;
-        })
-    })
+    // const limit = pLimit(5);
+    // const imagesToUpload = req.files.map((file) => {
+    //     return limit(async () => {
+    //         const result = await cloudinary.uploader.upload(file.path);
+    //         return result;
+    //     })
+    // })
 
-    const uploads = await Promise.all(imagesToUpload);
-    const images = uploads.map(image => image.secure_url);
+    // const uploads = await Promise.all(imagesToUpload);
+    // const images = uploads.map(image => image.secure_url);
+
+    const images = req?.files?.map((file) => {
+        return file.path;
+    })
 
     const { idEdit, postTitle, postDetail, postPlainDetail, editSummary, listIdTags } = req.body;
     const data = await handleUpdateEdiPost(idEdit, postTitle, postDetail, postPlainDetail, editSummary, images, listIdTags);

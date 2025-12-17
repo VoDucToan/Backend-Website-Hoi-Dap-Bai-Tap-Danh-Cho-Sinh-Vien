@@ -57,16 +57,20 @@ const createQuestion = async (req, res) => {
     //     })
     // }
 
-    const limit = pLimit(5);
-    const imagesToUpload = req.files.map((file) => {
-        return limit(async () => {
-            const result = await cloudinary.uploader.upload(file.path);
-            return result;
-        })
-    })
+    // const limit = pLimit(5);
+    // const imagesToUpload = req.files.map((file) => {
+    //     return limit(async () => {
+    //         const result = await cloudinary.uploader.upload(file.path);
+    //         return result;
+    //     })
+    // })
 
-    const uploads = await Promise.all(imagesToUpload);
-    const images = uploads.map(image => image.secure_url);
+    // const uploads = await Promise.all(imagesToUpload);
+    // const images = uploads.map(image => image.secure_url);
+
+    const images = req?.files?.map((file) => {
+        return file.path;
+    })
 
     const { idUser, postTitle, postDetail, postPlainDetail, listIdTags } = req.body;
     const data = await handleCreateQuestion(idUser, 1, postTitle, postDetail, postPlainDetail, images, listIdTags);
@@ -98,16 +102,20 @@ const updateQuestion = async (req, res) => {
     //     })
     // }
 
-    const limit = pLimit(5);
-    const imagesToUpload = req.files.map((file) => {
-        return limit(async () => {
-            const result = await cloudinary.uploader.upload(file.path);
-            return result;
-        })
-    })
+    // const limit = pLimit(5);
+    // const imagesToUpload = req.files.map((file) => {
+    //     return limit(async () => {
+    //         const result = await cloudinary.uploader.upload(file.path);
+    //         return result;
+    //     })
+    // })
 
-    const uploads = await Promise.all(imagesToUpload);
-    const images = uploads.map(image => image.secure_url);
+    // const uploads = await Promise.all(imagesToUpload);
+    // const images = uploads.map(image => image.secure_url);
+
+    const images = req?.files?.map((file) => {
+        return file.path;
+    })
 
     const { idQuestion, postTitle, postDetail, postPlainDetail, listIdTags, postStatus } = req.body;
     const data = await handleUpdateQuestion(idQuestion, postTitle, postDetail, postPlainDetail, images, listIdTags, postStatus);

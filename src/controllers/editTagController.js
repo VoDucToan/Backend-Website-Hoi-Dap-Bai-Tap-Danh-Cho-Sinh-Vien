@@ -21,16 +21,20 @@ const editTag = async (req, res) => {
     //     })
     // }
 
-    const limit = pLimit(5);
-    const imagesToUpload = req.files.map((file) => {
-        return limit(async () => {
-            const result = await cloudinary.uploader.upload(file.path);
-            return result;
-        })
-    })
+    // const limit = pLimit(5);
+    // const imagesToUpload = req.files.map((file) => {
+    //     return limit(async () => {
+    //         const result = await cloudinary.uploader.upload(file.path);
+    //         return result;
+    //     })
+    // })
 
-    const uploads = await Promise.all(imagesToUpload);
-    const images = uploads.map(image => image.secure_url);
+    // const uploads = await Promise.all(imagesToUpload);
+    // const images = uploads.map(image => image.secure_url);
+
+    const images = req?.files?.map((file) => {
+        return file.path;
+    })
 
     const { idUser, idTag, tagName, tagSummary, tagDescription, editSummary, previousEditId } = req.body;
 
@@ -89,16 +93,20 @@ const updateEditTag = async (req, res) => {
     //     })
     // }
 
-    const limit = pLimit(5);
-    const imagesToUpload = req.files.map((file) => {
-        return limit(async () => {
-            const result = await cloudinary.uploader.upload(file.path);
-            return result;
-        })
-    })
+    // const limit = pLimit(5);
+    // const imagesToUpload = req.files.map((file) => {
+    //     return limit(async () => {
+    //         const result = await cloudinary.uploader.upload(file.path);
+    //         return result;
+    //     })
+    // })
 
-    const uploads = await Promise.all(imagesToUpload);
-    const images = uploads.map(image => image.secure_url);
+    // const uploads = await Promise.all(imagesToUpload);
+    // const images = uploads.map(image => image.secure_url);
+
+    const images = req?.files?.map((file) => {
+        return file.path;
+    })
 
     const { idEdit, tagName, tagSummary, tagDescription, editSummary } = req.body;
     const data = await handleUpdateEditTag(idEdit, tagName, tagSummary, tagDescription, editSummary, images);

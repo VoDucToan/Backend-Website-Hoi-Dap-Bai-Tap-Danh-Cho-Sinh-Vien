@@ -51,16 +51,20 @@ const createAnswer = async (req, res) => {
     //     })
     // }
 
-    const limit = pLimit(5);
-    const imagesToUpload = req.files.map((file) => {
-        return limit(async () => {
-            const result = await cloudinary.uploader.upload(file.path);
-            return result;
-        })
-    })
+    // const limit = pLimit(5);
+    // const imagesToUpload = req.files.map((file) => {
+    //     return limit(async () => {
+    //         const result = await cloudinary.uploader.upload(file.path);
+    //         return result;
+    //     })
+    // })
 
-    const uploads = await Promise.all(imagesToUpload);
-    const images = uploads.map(image => image.secure_url);
+    // const uploads = await Promise.all(imagesToUpload);
+    // const images = uploads.map(image => image.secure_url);
+
+    const images = req?.files?.map((file) => {
+        return file.path;
+    })
 
     const { idUser, idQuestion, contentAnswer, contentPlainAnswer } = req.body;
     const data = await handleCreateAnswer(+idUser, idQuestion, 2, contentAnswer, contentPlainAnswer, images);
@@ -104,16 +108,20 @@ const updateAnswer = async (req, res) => {
     //     })
     // }
 
-    const limit = pLimit(5);
-    const imagesToUpload = req.files.map((file) => {
-        return limit(async () => {
-            const result = await cloudinary.uploader.upload(file.path);
-            return result;
-        })
-    })
+    // const limit = pLimit(5);
+    // const imagesToUpload = req.files.map((file) => {
+    //     return limit(async () => {
+    //         const result = await cloudinary.uploader.upload(file.path);
+    //         return result;
+    //     })
+    // })
 
-    const uploads = await Promise.all(imagesToUpload);
-    const images = uploads.map(image => image.secure_url);
+    // const uploads = await Promise.all(imagesToUpload);
+    // const images = uploads.map(image => image.secure_url);
+
+    const images = req?.files?.map((file) => {
+        return file.path;
+    })
 
     const { idAnswer, postDetail, postStatus, postPlainDetail } = req.body;
     const data = await handleUpdateAnswer(idAnswer, postDetail, postStatus, postPlainDetail, images);

@@ -64,16 +64,20 @@ const createTag = async (req, res) => {
     //     })
     // }
 
-    const limit = pLimit(5);
-    const imagesToUpload = req.files.map((file) => {
-        return limit(async () => {
-            const result = await cloudinary.uploader.upload(file.path);
-            return result;
-        })
-    })
+    // const limit = pLimit(5);
+    // const imagesToUpload = req.files.map((file) => {
+    //     return limit(async () => {
+    //         const result = await cloudinary.uploader.upload(file.path);
+    //         return result;
+    //     })
+    // })
 
-    const uploads = await Promise.all(imagesToUpload);
-    const images = uploads.map(image => image.secure_url);
+    // const uploads = await Promise.all(imagesToUpload);
+    // const images = uploads.map(image => image.secure_url);
+
+    const images = req?.files?.map((file) => {
+        return file.path;
+    })
 
     const { idUser, tagName, tagSummary, tagDescription } = req.body;
     const data = await handleCreateTag(idUser, tagName, tagSummary, tagDescription, images);
@@ -99,16 +103,20 @@ const updateTag = async (req, res) => {
     //     })
     // }
 
-    const limit = pLimit(5);
-    const imagesToUpload = req.files.map((file) => {
-        return limit(async () => {
-            const result = await cloudinary.uploader.upload(file.path);
-            return result;
-        })
-    })
+    // const limit = pLimit(5);
+    // const imagesToUpload = req.files.map((file) => {
+    //     return limit(async () => {
+    //         const result = await cloudinary.uploader.upload(file.path);
+    //         return result;
+    //     })
+    // })
 
-    const uploads = await Promise.all(imagesToUpload);
-    const images = uploads.map(image => image.secure_url);
+    // const uploads = await Promise.all(imagesToUpload);
+    // const images = uploads.map(image => image.secure_url);
+
+    const images = req?.files?.map((file) => {
+        return file.path;
+    })
 
     const { idTag, tagName, tagSummary, tagDescription, tagStatus } = req.body;
     const data = await handleUpdateTag(idTag, tagName, tagSummary, tagDescription, images, tagStatus);

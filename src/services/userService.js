@@ -96,6 +96,9 @@ const handleGetListUsersPagination = async (page, limit, search) => {
 
 const handleUpdateUser = async (idUser, idRole, userName, locationUser, aboutMe, avatarImage, reputation) => {
     try {
+        if (reputation === 'undefined' || reputation === 'null') {
+            reputation = undefined;
+        }
         await User.update(
             {
                 role_id: idRole,
