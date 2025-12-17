@@ -173,9 +173,11 @@ const handleCreateAnswer = async (idUser, idQuestion, idPostType, contentAnswer,
                     where: {
                         id: idQuestion,
                     },
+                    attributes: ['created_by_user_id'],
                 });
                 if (dataPost.created_by_user_id !== idUser) {
-                    const dataNotifyAuthorPost = await handleNotifyForAuthorPost(idQuestion, "Trả lời", "trả lời");
+                    const dataNotifyAuthorPost = await handleNotifyForAuthorPost(idQuestion, "Trả lời",
+                        "Câu hỏi của bạn đã có người trả lời", `/questions/${idQuestion}`, idAnswer);
                     if (dataNotifyAuthorPost?.EC !== 0) {
                         return {
                             EC: 3,
@@ -183,7 +185,9 @@ const handleCreateAnswer = async (idUser, idQuestion, idPostType, contentAnswer,
                         };
                     }
                 }
-                const dataNotifyUserFollowingPost = await handleNotifyForUserFollowingPost(idQuestion, +idUser, 'Trả lời', 'trả lời');
+                const dataNotifyUserFollowingPost = await handleNotifyForUserFollowingPost(idQuestion, +idUser, 'Trả lời',
+                    `Câu hỏi bạn theo dõi đã có người trả lời`, `/questions/${idQuestion}`, idAnswer
+                );
                 if (dataNotifyUserFollowingPost?.EC === 0) {
                     return {
                         EC: 0,
@@ -252,7 +256,8 @@ const handleAcceptAnswer = async (idQuestion, idAnswer) => {
             },
         );
         if (question.created_by_user_id !== answer.created_by_user_id) {
-            const dataNotifyAuthorPost = await handleNotifyForAuthorPost(idAnswer, "Chấp nhận", "chấp nhận");
+            const dataNotifyAuthorPost = await handleNotifyForAuthorPost(idAnswer, "Chấp nhận",
+                "Câu trả lời của bạn đã được chấp nhận, +15 điểm danh tiếng", `/questions/${idQuestion}`, idAnswer);
             if (dataNotifyAuthorPost?.EC !== 0) {
                 return {
                     EC: 3,
@@ -277,7 +282,8 @@ const handleAcceptAnswer = async (idQuestion, idAnswer) => {
             }
         }
         const dataNotifyUserFollowingPost = await handleNotifyForUserFollowingPost(idQuestion,
-            +answer.created_by_user_id, 'Chấp nhận', 'chấp nhận câu trả lời');
+            +answer.created_by_user_id, 'Chấp nhận', "Câu hỏi bạn theo dõi đã chấp nhận câu trả lời",
+            `/questions/${idQuestion}`, idAnswer);
         if (dataNotifyUserFollowingPost?.EC === 0) {
             return {
                 EC: 0,

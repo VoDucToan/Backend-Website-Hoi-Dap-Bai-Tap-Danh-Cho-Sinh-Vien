@@ -1,23 +1,36 @@
-const { handleEditTag, handleGetEditTagForUser, handleUpdateEditTag, handleGetListEditsTagPagination, handleGetListEditsTag, handleGetEditTag, handleRejectEditForTag, handleApproveEditForTag } = require("../services/editTagService");
+const { handleEditTag, handleGetEditTagForUser, handleUpdateEditTag, handleGetListEditsTagPagination, handleGetListEditsTag, handleGetEditTag, handleRejectEditForTag, handleApproveEditForTag, handleGetEditForTag } = require("../services/editTagService");
+const cloudinary = require("../config/cloudinary");
+const pLimit = require("p-limit");
 
 const editTag = async (req, res) => {
     if (req?.files && req.files.length > 0) {
-        req.files.map((file) => {
-            if (!file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF)$/)) {
+        for (const file of req.files) {
+            if (!file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF|webp|WEBP)$/)) {
                 return res.status(200).json({
-                    EC: 2,
+                    EC: 1,
                     EM: 'Only image files (jpg, jpeg, png) are allowed!'
                 });
             };
-        })
+        }
     }
 
-    let images = null;
-    if (req?.files && req.files.length > 0) {
-        images = req.files.map((file) => {
-            return file.filename;
+    // let images = null;
+    // if (req?.files && req.files.length > 0) {
+    //     images = req.files.map((file) => {
+    //         return file.filename;
+    //     })
+    // }
+
+    const limit = pLimit(5);
+    const imagesToUpload = req.files.map((file) => {
+        return limit(async () => {
+            const result = await cloudinary.uploader.upload(file.path);
+            return result;
         })
-    }
+    })
+
+    const uploads = await Promise.all(imagesToUpload);
+    const images = uploads.map(image => image.secure_url);
 
     const { idUser, idTag, tagName, tagSummary, tagDescription, editSummary, previousEditId } = req.body;
 
@@ -51,24 +64,41 @@ const getEditTag = async (req, res) => {
     return res.status(200).json(data);
 }
 
+const getEditForTag = async (req, res) => {
+    let idTag = req.params.idTag;
+    const data = await handleGetEditForTag(idTag);
+    return res.status(200).json(data);
+}
+
 const updateEditTag = async (req, res) => {
     if (req?.files && req.files.length > 0) {
-        req.files.map((file) => {
-            if (!file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF)$/)) {
+        for (const file of req.files) {
+            if (!file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF|webp|WEBP)$/)) {
                 return res.status(200).json({
-                    EC: 2,
+                    EC: 1,
                     EM: 'Only image files (jpg, jpeg, png) are allowed!'
                 });
             };
-        })
+        }
     }
 
-    let images = null;
-    if (req?.files && req.files.length > 0) {
-        images = req.files.map((file) => {
-            return file.filename;
+    // let images = null;
+    // if (req?.files && req.files.length > 0) {
+    //     images = req.files.map((file) => {
+    //         return file.filename;
+    //     })
+    // }
+
+    const limit = pLimit(5);
+    const imagesToUpload = req.files.map((file) => {
+        return limit(async () => {
+            const result = await cloudinary.uploader.upload(file.path);
+            return result;
         })
-    }
+    })
+
+    const uploads = await Promise.all(imagesToUpload);
+    const images = uploads.map(image => image.secure_url);
 
     const { idEdit, tagName, tagSummary, tagDescription, editSummary } = req.body;
     const data = await handleUpdateEditTag(idEdit, tagName, tagSummary, tagDescription, editSummary, images);
@@ -76,18 +106,18 @@ const updateEditTag = async (req, res) => {
 }
 
 const rejectEditForTag = async (req, res) => {
-    const { idEdit, idUser, notificationType, notificationSummary, notificationResource } = req.body;
-    const data = await handleRejectEditForTag(idEdit, idUser, notificationType, notificationSummary, notificationResource);
+    const { idEdit } = req.body;
+    const data = await handleRejectEditForTag(idEdit);
     return res.status(200).json(data);
 }
 
 const approveEditForTag = async (req, res) => {
-    const { idEdit, idUser, notificationType, notificationSummary, notificationResource } = req.body;
-    const data = await handleApproveEditForTag(idEdit, idUser, notificationType, notificationSummary, notificationResource);
+    const { idEdit } = req.body;
+    const data = await handleApproveEditForTag(idEdit);
     return res.status(200).json(data);
 }
 
 module.exports = {
     editTag, getEditTagForUser, updateEditTag, getListEditsTag,
-    getEditTag, rejectEditForTag, approveEditForTag
+    getEditTag, rejectEditForTag, approveEditForTag, getEditForTag
 }

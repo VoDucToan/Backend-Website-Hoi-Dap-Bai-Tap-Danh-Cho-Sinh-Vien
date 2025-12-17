@@ -173,43 +173,33 @@ const handleNotifyForUser = async (idUser, notificationType, notificationSummary
     }
 }
 
-const handleNotifyForUserFollowingPost = async (idPost, idUser, notificationType, notificationSummary) => {
+const handleNotifyForUserFollowingPost = async (idPost, idUser, notificationType, notificationSummary,
+    notificationResource, idTargetAnswer
+) => {
     try {
-        const dataPostType = await handleGetPostType(idPost);
-        if (dataPostType?.EC === 0) {
-            const dataUserFollowPost = await handleGetUserFollowByPost(idPost);
-            if (dataUserFollowPost?.EC === 0) {
-                const post = dataPostType.DT.post_type_id === 1 ? "Câu hỏi" : "Câu trả lời"
-                const idQuestion = dataPostType.DT.post_type_id === 1 ? idPost : dataPostType.DT.parent_question_id
-                const idAnswer = dataPostType.DT.post_type_id === 1 ? null : idPost;
-                const notifications = dataUserFollowPost.DT && dataUserFollowPost.DT.length > 0
-                    && dataUserFollowPost.DT.filter(item => item.user_id !== idUser)
-                        .map((item) => {
-                            return {
-                                belonged_by_user_id: item.user_id,
-                                notification_type: notificationType,
-                                notification_summary: `${post} bạn theo dõi đã có người ${notificationSummary}`,
-                                notification_resource: `/questions/${idQuestion}`,
-                                id_target_answer: idAnswer,
-                            }
-                        })
-                await Notification.bulkCreate(notifications);
-                return {
-                    EC: 0,
-                    EM: "Notify for user following post succeed",
-                };
-            }
-            else {
-                return {
-                    EC: 2,
-                    EM: dataUserFollowPost.EM,
-                };
-            }
+        const dataUserFollowPost = await handleGetUserFollowByPost(idPost);
+        if (dataUserFollowPost?.EC === 0) {
+            const notifications = dataUserFollowPost.DT && dataUserFollowPost.DT.length > 0
+                && dataUserFollowPost.DT.filter(item => item.user_id !== idUser)
+                    .map((item) => {
+                        return {
+                            belonged_by_user_id: item.user_id,
+                            notification_type: notificationType,
+                            notification_summary: notificationSummary,
+                            notification_resource: notificationResource,
+                            id_target_answer: idTargetAnswer,
+                        }
+                    })
+            await Notification.bulkCreate(notifications);
+            return {
+                EC: 0,
+                EM: "Notify for user following post succeed",
+            };
         }
         else {
             return {
-                EC: 3,
-                EM: dataPostType.EM,
+                EC: 2,
+                EM: dataUserFollowPost.EM,
             };
         }
     } catch (error) {
@@ -221,18 +211,17 @@ const handleNotifyForUserFollowingPost = async (idPost, idUser, notificationType
 
 }
 
-const handleNotifyForAuthorPost = async (idPost, notificationType, notificationSummary) => {
+const handleNotifyForAuthorPost = async (idPost, notificationType, notificationSummary,
+    notificationResource, idTargetAnswer) => {
     try {
         const dataPost = await Post.findOne({
             where: {
                 id: idPost,
             },
+            attributes: ['created_by_user_id'],
         });
-        const post = dataPost.post_type_id === 1 ? "Câu hỏi" : "Câu trả lời"
-        const idQuestion = dataPost.post_type_id === 1 ? idPost : dataPost.parent_question_id
-        const idAnswer = dataPost.post_type_id === 1 ? null : idPost;
         const dataNotifyUser = await handleNotifyForUser(dataPost.created_by_user_id, notificationType,
-            `${post} của bạn đã có người ${notificationSummary}`, `/questions/${idQuestion}`, idAnswer,)
+            notificationSummary, notificationResource, idTargetAnswer,)
         if (dataNotifyUser?.EC === 0) {
             return {
                 EC: 0,

@@ -10,6 +10,7 @@ const User = require('../models/User');
 const { handleCreateImagesForTag, handleDeleteImagesForTag } = require('./imageService');
 const { handleEditTag } = require('./editTagService');
 const { handleDecreaseReputationForUser } = require('./userService');
+const { handleNotifyForUser } = require('./notificationService');
 
 const handleGetTagsByQuestion = async (idQuestion) => {
     let [results, fields] = await connection.query(
@@ -214,6 +215,13 @@ const handleInsertTagsEdit = async (idEdit, listIdTags) => {
 
 const handleCreateTag = async (idUser, tagName, tagSummary, tagDescription, tagImage) => {
     try {
+        const dataDecreaseReputationUser = await handleDecreaseReputationForUser(idUser, 250);
+        if (dataDecreaseReputationUser?.EC !== 0) {
+            return {
+                EC: -2,
+                EM: dataDecreaseReputationUser.EM,
+            };
+        }
         const tag = await Tag.create({
             created_by_user_id: idUser,
             tag_name: tagName,
@@ -222,7 +230,6 @@ const handleCreateTag = async (idUser, tagName, tagSummary, tagDescription, tagI
         });
         const idTag = tag?.dataValues?.id;
         const dataImageTag = await handleCreateImagesForTag(idTag, tagImage);
-        console.log('dataImageTag', dataImageTag);
         if (dataImageTag && dataImageTag.EC === 0) {
             const dataEditTag = await handleEditTag(idUser, idTag, tagName, tagSummary, tagDescription, '', tagImage);
             if (dataEditTag && dataEditTag.EC === 0) {
@@ -236,20 +243,18 @@ const handleCreateTag = async (idUser, tagName, tagSummary, tagDescription, tagI
                         },
                     },
                 );
-                const dataDecreaseReputationUser = await handleDecreaseReputationForUser(idUser, 250);
-                if (dataDecreaseReputationUser?.EC === 0) {
+                const dataNotifyUser = await handleNotifyForUser(idUser, "Tạo thẻ mới",
+                    "-250 điểm danh tiếng để tạo thẻ mới", "/tags/create")
+                if (dataNotifyUser.EC !== 0) {
                     return {
-                        EC: 0,
-                        EM: "Create tag succeed",
+                        EC: 5,
+                        EM: dataNotifyUser.EM,
                     };
                 }
-                else {
-                    return {
-                        EC: 3,
-                        EM: dataDecreaseReputationUser.EM,
-                    };
-                }
-
+                return {
+                    EC: 0,
+                    EM: "Create tag succeed",
+                };
             }
             else {
                 return {

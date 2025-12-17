@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/connectDB');
 const Role = require('./Role');
+require('dotenv').config();
 
 const User = sequelize.define(
     'user',
@@ -51,7 +52,7 @@ const User = sequelize.define(
         },
         avatar_file_name: {
             type: DataTypes.STRING(2083),
-            defaultValue: "avatar-default-user.jpg",
+            defaultValue: process.env.CLOUDINARY_DEFAULT_AVATAR,
         },
     },
     {

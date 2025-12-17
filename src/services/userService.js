@@ -4,6 +4,7 @@ const User = require('../models/User');
 const { Op } = require('sequelize');
 const Post = require('../models/Post');
 const { handleGrantPrivilegesForUser } = require('./privilegeService');
+const sequelize = require('../config/connectDB');
 
 const handleGetUser = async (idUser) => {
     try {
@@ -93,7 +94,7 @@ const handleGetListUsersPagination = async (page, limit, search) => {
     }
 }
 
-const handleUpdateUser = async (idUser, idRole, userName, locationUser, aboutMe, avatarImage) => {
+const handleUpdateUser = async (idUser, idRole, userName, locationUser, aboutMe, avatarImage, reputation) => {
     try {
         await User.update(
             {
@@ -101,6 +102,7 @@ const handleUpdateUser = async (idUser, idRole, userName, locationUser, aboutMe,
                 display_name: userName,
                 location: locationUser,
                 about_me: aboutMe,
+                reputation: reputation,
             },
             {
                 where: {
@@ -148,6 +150,7 @@ const handleIncreaseReputationForAuthorPost = async (idPost, reputationPoints) =
             where: {
                 id: idPost,
             },
+            attributes: ['created_by_user_id'],
         });
         await User.increment('reputation', {
             by: reputationPoints,
@@ -211,14 +214,18 @@ const handleDecreaseReputationForAuthorPost = async (idPost, reputationPoints) =
             where: {
                 id: idPost,
             },
+            attributes: ['created_by_user_id'],
         });
-        const user = await User.findOne({
-            where: {
-                id: post.created_by_user_id,
+
+        await User.update(
+            {
+                reputation: sequelize.literal(`GREATEST(1, reputation - ${reputationPoints})`)
             },
-        });
-        user.reputation = Math.max(1, user.reputation - reputationPoints);
-        await user.save();
+            {
+                where: { id: post.created_by_user_id }
+            }
+        );
+
         return {
             EC: 0,
             EM: 'Decrease reputation for author post succeed',
@@ -237,9 +244,15 @@ const handleDecreaseReputationForUser = async (idUser, reputationPoints) => {
             where: {
                 id: idUser,
             },
+            attributes: ['reputation'],
         });
-        user.reputation = Math.max(1, user.reputation - reputationPoints);
-        await user.save();
+        if (user.reputation - reputationPoints < 1) {
+            return {
+                EC: 2,
+                EM: 'User reputation score is not enough to decrease',
+            }
+        }
+        await User.increment({ reputation: -reputationPoints }, { where: { id: idUser } });
         return {
             EC: 0,
             EM: 'Decrease reputation for user succeed',

@@ -11,16 +11,16 @@ const router = express.Router();
 router.get('/number-answers/:idquestion', getNumberAnswers);
 router.get('/list-answers/:idquestion', getListAnswers);
 router.get('/answer/:idanswer', auth, getAnswer);
-router.get('/page-number-by-answer', auth, getPageNumberByAnswer);
-router.get('/amount-answers-by-user/:idUser', auth, getAmountAnswersByUser);
-router.get('/answers-by-user/:idUser', auth, getAnswersByUser);
+router.get('/page-number-by-answer', getPageNumberByAnswer);
+router.get('/amount-answers-by-user/:idUser', getAmountAnswersByUser);
+router.get('/answers-by-user/:idUser', getAnswersByUser);
 router.get('/answers', auth, getAnswers);
 
 router.put('/accept-answer', auth, acceptAnswer);
 router.put('/unaccepted-answer', auth, unacceptedAnswer);
 router.put('/update-answer', auth, upload.array('fileImages', 10), updateAnswer);
 
-router.post('/create-answers', auth, upload.array('fileImages', 3), createAnswer);
+router.post('/create-answers', auth, upload.array('fileImages', 10), createAnswer);
 
 router.delete('/answers-for-question/:idquestion', auth, deleteAnswersForQuestion);
 

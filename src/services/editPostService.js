@@ -8,9 +8,10 @@ const { DataTypes, Op } = require('sequelize');
 const dayjs = require("dayjs");
 const { handleGetPostType } = require("./postService");
 const Post_Tag = require("../models/Post_Tag");
-const { handleNotifyForUser, handleNotifyForUserFollowingPost } = require("./notificationService");
+const { handleNotifyForUser, handleNotifyForUserFollowingPost, handleNotifyForAuthorPost } = require("./notificationService");
 const { handleIncreaseReputationForAuthorPost, handleIncreaseReputationForUser } = require("./userService");
 const Edit_Post = require("../models/Edit_Post");
+const Notification = require("../models/Notification");
 
 const handleUpdateQuestion = async (idQuestion, postTitle, postDetail, postPlainDetail, postImage, listIdTags, postStatus) => {
     try {
@@ -199,8 +200,6 @@ const handleGetEditForPost = async (idPost) => {
             EM: error.message,
         };
     }
-
-
 }
 
 const handleGetListRevisionsPost = async (idPost, idUser) => {
@@ -327,7 +326,7 @@ const handleGetListEditsPagination = async (page, limit, editStatus) => {
     }
 }
 
-const handleApproveEditForPost = async (idEdit, idUser, notificationType, notificationSummary, notificationResource) => {
+const handleApproveEditForPost = async (idEdit) => {
     try {
         await Edit.update(
             {
@@ -346,6 +345,17 @@ const handleApproveEditForPost = async (idEdit, idUser, notificationType, notifi
             },
         });
 
+        const dataPostType = await handleGetPostType(edit.post_id);
+        if (dataPostType?.EC !== 0) {
+            return {
+                EC: 5,
+                EM: dataPostType.EM,
+            };
+        }
+        const postType = dataPostType.DT.post_type_id === 1 ? "câu hỏi" : "câu trả lời"
+        const idQuestion = dataPostType.DT.post_type_id === 1 ? edit.post_id : dataPostType.DT.parent_question_id
+        const idAnswer = dataPostType.DT.post_type_id === 1 ? null : edit.post_id;
+
         const listEditsReject = await Edit.findAll({
             where: {
                 post_id: edit.post_id,
@@ -356,17 +366,30 @@ const handleApproveEditForPost = async (idEdit, idUser, notificationType, notifi
             },
         });
 
-        for (const editReject of listEditsReject) {
-            const dataRejectEditPost = await handleRejectEditForPost(editReject.id, editReject.edited_by_user_id, "Chỉnh sửa",
-                "Bài viết đã được thay đổi trước khi bản chỉnh sửa của bạn được duyệt. Vui lòng xem và chỉnh sửa lại!",
-                `/posts/${editReject.post_id}/edit`);
-            if (dataRejectEditPost && dataRejectEditPost.EC !== 0) {
-                return {
-                    EC: 5,
-                    EM: dataRejectEditPost.EM,
-                };
+        const arrIdEditsReject = listEditsReject?.length > 0 && listEditsReject.map((item) => {
+            return item.id;
+        })
+        await Edit.update(
+            {
+                edit_status: 2,
+            },
+            {
+                where: {
+                    id: { [Op.in]: arrIdEditsReject },
+                },
+            },
+        );
+        const notifications = listEditsReject?.length > 0 && listEditsReject.map((item) => {
+            return {
+                belonged_by_user_id: item.edited_by_user_id,
+                notification_type: "Chỉnh sửa",
+                notification_summary: `${postType.charAt(0).toUpperCase() + postType.slice(1)} đã được thay đổi trước khi bản chỉnh sửa của bạn được duyệt. 
+                Vui lòng xem và chỉnh sửa lại!`,
+                notification_resource: `/posts/${item.post_id}/edit`,
+                id_target_answer: null,
             }
-        }
+        })
+        await Notification.bulkCreate(notifications);
 
         const dataImagesEdit = await handleGetImagesForEdit(idEdit);
         if (dataImagesEdit && dataImagesEdit.EC === 0) {
@@ -375,17 +398,32 @@ const handleApproveEditForPost = async (idEdit, idUser, notificationType, notifi
             })
             const dataTagsEdit = await handleGetTagsEdit(idEdit);
             if (dataTagsEdit && dataTagsEdit.EC === 0) {
-                const listIdTags = dataTagsEdit.DT.Tags.map((tag) => {
+                const listIdTags = dataTagsEdit.DT.tags.map((tag) => {
                     return tag.id;
                 })
                 const dataUpdateQuestion = await handleUpdateQuestion(edit.post_id, edit.post_title,
                     edit.post_details, edit.post_plain_details, postImage, listIdTags)
                 if (dataUpdateQuestion && dataUpdateQuestion.EC === 0) {
-                    const dataIncreaseReputationUser = await handleIncreaseReputationForUser(idUser, 10);
+                    const dataIncreaseReputationUser = await handleIncreaseReputationForUser(edit.edited_by_user_id, 10);
                     if (dataIncreaseReputationUser?.EC === 0) {
-                        const dataNotifyUser = await handleNotifyForUser(idUser, notificationType, notificationSummary, notificationResource)
+
+                        const dataNotifyAuthorPost = await handleNotifyForAuthorPost(edit.post_id, "Chỉnh sửa",
+                            `${postType.charAt(0).toUpperCase() + postType.slice(1)} của bạn đã có người chỉnh sửa`,
+                            `/questions/${idQuestion}`, idAnswer);
+                        if (dataNotifyAuthorPost?.EC !== 0) {
+                            return {
+                                EC: 7,
+                                EM: dataNotifyAuthorPost.EM,
+                            };
+                        }
+
+                        const dataNotifyUser = await handleNotifyForUser(edit.edited_by_user_id, "Chỉnh sửa",
+                            `Bản chỉnh sửa ${postType} của bạn được chấp nhận, +10 điểm danh tiếng`, `/questions/${idQuestion}`, idAnswer)
                         if (dataNotifyUser && dataNotifyUser.EC === 0) {
-                            const dataNotifyUserFollowingPost = await handleNotifyForUserFollowingPost(edit.post_id, idUser, 'Chỉnh sửa', 'chỉnh sửa');
+                            const dataNotifyUserFollowingPost = await handleNotifyForUserFollowingPost(edit.post_id,
+                                edit.edited_by_user_id, 'Chỉnh sửa',
+                                `${postType.charAt(0).toUpperCase() + postType.slice(1)} bạn theo dõi đã có người chỉnh sửa`,
+                                `/questions/${idQuestion}`, idAnswer);
                             if (dataNotifyUserFollowingPost?.EC === 0) {
                                 return {
                                     EC: 0,
@@ -510,7 +548,7 @@ const handleUpdateEdiPost = async (idEdit, postTitle, postDetail, postPlainDetai
     }
 }
 
-const handleRejectEditForPost = async (idEdit, idUser, notificationType, notificationSummary, notificationResource) => {
+const handleRejectEditForPost = async (idEdit) => {
     try {
         await Edit.update(
             {
@@ -522,7 +560,27 @@ const handleRejectEditForPost = async (idEdit, idUser, notificationType, notific
                 },
             },
         );
-        const dataNotifyUser = await handleNotifyForUser(idUser, notificationType, notificationSummary, notificationResource)
+
+        const edit = await Edit.findOne({
+            where: {
+                id: idEdit,
+            },
+            attributes: ['edited_by_user_id', 'post_id'],
+        });
+
+        const dataPostType = await handleGetPostType(edit.post_id);
+        if (dataPostType?.EC !== 0) {
+            return {
+                EC: 5,
+                EM: dataPostType.EM,
+            };
+        }
+        const postType = dataPostType.DT.post_type_id === 1 ? "câu hỏi" : "câu trả lời"
+        const idQuestion = dataPostType.DT.post_type_id === 1 ? edit.post_id : dataPostType.DT.parent_question_id
+        const idAnswer = dataPostType.DT.post_type_id === 1 ? null : edit.post_id;
+
+        const dataNotifyUser = await handleNotifyForUser(edit.edited_by_user_id, "Chỉnh sửa",
+            `Bản chỉnh sửa ${postType} của bạn được từ chối`, `/questions/${idQuestion}`, idAnswer)
         if (dataNotifyUser && dataNotifyUser.EC === 0) {
             return {
                 EC: 0,

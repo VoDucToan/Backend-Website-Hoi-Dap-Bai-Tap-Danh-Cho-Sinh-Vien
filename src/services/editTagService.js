@@ -7,6 +7,7 @@ const dayjs = require("dayjs");
 const { handleNotifyForUser } = require("./notificationService");
 const Tag = require("../models/Tag");
 const { handleIncreaseReputationForUser } = require("./userService");
+const Notification = require("../models/Notification");
 
 const handleUpdateTag = async (idTag, tagName, tagSummary, tagDescription, tagImage, tagStatus) => {
     try {
@@ -242,6 +243,30 @@ const handleGetEditTag = async (idEditTag) => {
     }
 }
 
+const handleGetEditForTag = async (idTag) => {
+    try {
+        const edit = await Edit_Tag.findOne({
+            where: {
+                tag_id: idTag,
+                edit_status: 1,
+            },
+            order: [['createdAt', 'DESC']],
+        });
+        const plainEdit = edit.get({ plain: true });
+        plainEdit.editedTime = dayjs(plainEdit.createdAt).format('D MMM, YYYY [a]t H:mm');
+        return {
+            EC: 0,
+            EM: 'Get edit for tag succeed',
+            DT: plainEdit
+        }
+    } catch (error) {
+        return {
+            EC: 1,
+            EM: error.message,
+        };
+    }
+}
+
 const handleUpdateEditTag = async (idEdit, tagName, tagSummary, tagDescription, editSummary, editImage) => {
     try {
         await Edit_Tag.update(
@@ -290,7 +315,7 @@ const handleUpdateEditTag = async (idEdit, tagName, tagSummary, tagDescription, 
     }
 }
 
-const handleRejectEditForTag = async (idEdit, idUser, notificationType, notificationSummary, notificationResource) => {
+const handleRejectEditForTag = async (idEdit) => {
     try {
         await Edit_Tag.update(
             {
@@ -302,7 +327,16 @@ const handleRejectEditForTag = async (idEdit, idUser, notificationType, notifica
                 },
             },
         );
-        const dataNotifyUser = await handleNotifyForUser(idUser, notificationType, notificationSummary, notificationResource)
+
+        const edit = await Edit_Tag.findOne({
+            where: {
+                id: idEdit,
+            },
+            attributes: ['edited_by_user_id', 'tag_id'],
+        });
+
+        const dataNotifyUser = await handleNotifyForUser(edit.edited_by_user_id, "Chỉnh sửa",
+            "Bản chỉnh sửa thẻ của bạn được từ chối", `/tags/${edit.tag_id}/info`, null);
         if (dataNotifyUser && dataNotifyUser.EC === 0) {
             return {
                 EC: 0,
@@ -324,7 +358,7 @@ const handleRejectEditForTag = async (idEdit, idUser, notificationType, notifica
     }
 }
 
-const handleApproveEditForTag = async (idEdit, idUser, notificationType, notificationSummary, notificationResource) => {
+const handleApproveEditForTag = async (idEdit) => {
     try {
         await Edit_Tag.update(
             {
@@ -353,17 +387,30 @@ const handleApproveEditForTag = async (idEdit, idUser, notificationType, notific
             },
         });
 
-        for (const editReject of listEditsReject) {
-            const dataRejectEditPost = await handleRejectEditForTag(editReject.id, editReject.edited_by_user_id, "Chỉnh sửa",
-                "Bài viết đã được thay đổi trước khi bản chỉnh sửa của bạn được duyệt. Vui lòng xem và chỉnh sửa lại!",
-                `/edit-tag-wiki/${editReject.tag_id}`);
-            if (dataRejectEditPost && dataRejectEditPost.EC !== 0) {
-                return {
-                    EC: 5,
-                    EM: dataRejectEditPost.EM,
-                };
+        const arrIdEditsReject = listEditsReject?.length > 0 && listEditsReject.map((item) => {
+            return item.id;
+        })
+        await Edit_Tag.update(
+            {
+                edit_status: 2,
+            },
+            {
+                where: {
+                    id: { [Op.in]: arrIdEditsReject },
+                },
+            },
+        );
+        const notifications = listEditsReject?.length > 0 && listEditsReject.map((item) => {
+            return {
+                belonged_by_user_id: item.edited_by_user_id,
+                notification_type: "Chỉnh sửa",
+                notification_summary: `Thẻ đã được thay đổi trước khi bản chỉnh sửa của bạn được duyệt. 
+                Vui lòng xem và chỉnh sửa lại!`,
+                notification_resource: `/edit-tag-wiki/${item.tag_id}`,
+                id_target_answer: null,
             }
-        }
+        })
+        await Notification.bulkCreate(notifications);
 
         const dataImagesEdit = await handleGetImagesForEditTag(idEdit);
         if (dataImagesEdit && dataImagesEdit.EC === 0) {
@@ -373,9 +420,10 @@ const handleApproveEditForTag = async (idEdit, idUser, notificationType, notific
             const dataUpdateTag = await handleUpdateTag(edit.tag_id, edit.tag_name, edit.tag_summary,
                 edit.tag_description, tagImage)
             if (dataUpdateTag && dataUpdateTag.EC === 0) {
-                const dataIncreaseReputationUser = await handleIncreaseReputationForUser(idUser, 10);
+                const dataIncreaseReputationUser = await handleIncreaseReputationForUser(edit.edited_by_user_id, 10);
                 if (dataIncreaseReputationUser?.EC === 0) {
-                    const dataNotifyUser = await handleNotifyForUser(idUser, notificationType, notificationSummary, notificationResource)
+                    const dataNotifyUser = await handleNotifyForUser(edit.edited_by_user_id, "Chỉnh sửa",
+                        "Bản chỉnh sửa thẻ của bạn được chấp nhận, +10 điểm danh tiếng", `/tags/${edit.tag_id}/info`, null)
                     if (dataNotifyUser && dataNotifyUser.EC === 0) {
                         return {
                             EC: 0,
@@ -423,5 +471,6 @@ const handleApproveEditForTag = async (idEdit, idUser, notificationType, notific
 module.exports = {
     handleEditTag, handleGetEditTagForUser, handleUpdateEditTag,
     handleGetListEditsTagPagination, handleGetListEditsTag, handleGetEditTag,
-    handleRejectEditForTag, handleApproveEditForTag, handleUpdateTag
+    handleRejectEditForTag, handleApproveEditForTag, handleUpdateTag,
+    handleGetEditForTag
 }

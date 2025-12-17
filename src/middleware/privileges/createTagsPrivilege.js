@@ -15,7 +15,7 @@ const checkCreateTagsPrivilege = async (req, res, next) => {
     else {
         return res.status(403).json({
             EC: -1,
-            EM: "You must reach 150 reputation points to unlock create tags privilege"
+            EM: "You must reach 300 reputation points to unlock create tags privilege"
         });
     }
 }

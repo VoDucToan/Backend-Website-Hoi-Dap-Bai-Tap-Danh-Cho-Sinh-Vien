@@ -15,7 +15,7 @@ const checkUpVotePostPrivilege = async (req, res, next) => {
     else {
         return res.status(403).json({
             EC: -1,
-            EM: "You must reach 15 reputation points to unlock up vote post privilege"
+            EM: "You must reach 50 reputation points to unlock up vote post privilege"
         });
     }
 }

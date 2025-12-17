@@ -15,7 +15,7 @@ const checkCommentPrivilege = async (req, res, next) => {
     else {
         return res.status(403).json({
             EC: -1,
-            EM: "You must reach 4 reputation points to unlock comment privilege"
+            EM: "You must reach 20 reputation points to unlock comment privilege"
         });
     }
 }

@@ -40,7 +40,6 @@ const auth = async (req, res, next) => {
     //     next();
     // }
     const refreshToken = req?.signedCookies?.refreshToken;
-    console.log('refreshToken', refreshToken);
     if (!refreshToken) {
         return res.status(401).json();
     }
@@ -49,17 +48,14 @@ const auth = async (req, res, next) => {
             where: { refresh_token: refreshToken }
         }
     );
-    console.log('user', user);
     if (!user) {
         return res.status(401).json();
     }
 
     if (req?.headers?.authorization?.split(' ')?.[1]) {
         const accessToken = req?.headers?.authorization?.split(' ')?.[1];
-        console.log('accessToken', accessToken);
         try {
             const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET)
-            console.log('decoded', decoded);
             req.user = {
                 id: decoded.id,
                 email: decoded.email,

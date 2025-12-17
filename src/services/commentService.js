@@ -1,7 +1,9 @@
 const dayjs = require('dayjs');
 const connection = require('../config/database');
 const Comment = require('../models/Comment');
-const { handleNotifyForUserFollowingPost } = require('./notificationService');
+const { handleNotifyForUserFollowingPost, handleNotifyForAuthorPost } = require('./notificationService');
+const { handleGetPostType } = require('./postService');
+const Post = require('../models/Post');
 
 const handleGetListComments = async (idPost) => {
     try {
@@ -36,7 +38,40 @@ const handleCreateComment = async (idUser, idPost, contentComment) => {
             post_id: idPost,
             comment_text: contentComment
         });
-        const dataNotifyUserFollowingPost = await handleNotifyForUserFollowingPost(idPost, idUser, 'Bình luận', 'bình luận');
+
+        const dataPostType = await handleGetPostType(idPost);
+        if (dataPostType?.EC !== 0) {
+            return {
+                EC: 5,
+                EM: dataPostType.EM,
+            };
+        }
+        const postType = dataPostType.DT.post_type_id === 1 ? "câu hỏi" : "câu trả lời"
+        const idQuestion = dataPostType.DT.post_type_id === 1 ? idPost : dataPostType.DT.parent_question_id
+        const idAnswer = dataPostType.DT.post_type_id === 1 ? null : idPost;
+
+
+        const dataPost = await Post.findOne({
+            where: {
+                id: idPost,
+            },
+            attributes: ['created_by_user_id'],
+        });
+        if (dataPost.created_by_user_id !== idUser) {
+            const dataNotifyAuthorPost = await handleNotifyForAuthorPost(idPost, "Bình luận",
+                `${postType.charAt(0).toUpperCase() + postType.slice(1)} của bạn đã có người bình luận`,
+                `/questions/${idQuestion}`, idAnswer);
+            if (dataNotifyAuthorPost.EC !== 0) {
+                return {
+                    EC: 2,
+                    EM: dataNotifyAuthorPost.EM,
+                };
+            }
+        }
+
+        const dataNotifyUserFollowingPost = await handleNotifyForUserFollowingPost(idPost, idUser, 'Bình luận',
+            `${postType.charAt(0).toUpperCase() + postType.slice(1)} bạn theo dõi đã có người bình luận`,
+            `/questions/${idQuestion}`, idAnswer);
         if (dataNotifyUserFollowingPost?.EC === 0) {
             return {
                 EC: 0,

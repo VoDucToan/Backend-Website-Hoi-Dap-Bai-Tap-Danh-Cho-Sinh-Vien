@@ -11,8 +11,8 @@ router.get('/list-questions', getListQuestions)
 router.get('/questions-by-answer/:idanswer', auth, getQuestionByAnswer)
 router.get('/question/:idquestion', getQuestion);
 router.get('/number-question-by-tag/:idtag', auth, getNumberQuestionByTag);
-router.get('/amount-questions-by-user/:idUser', auth, getAmountQuestionsByUser);
-router.get('/questions-by-user/:idUser', auth, getQuestionsByUser);
+router.get('/amount-questions-by-user/:idUser', getAmountQuestionsByUser);
+router.get('/questions-by-user/:idUser', getQuestionsByUser);
 
 router.post('/create-question', auth, upload.array('fileImages', 10), createQuestion);
 

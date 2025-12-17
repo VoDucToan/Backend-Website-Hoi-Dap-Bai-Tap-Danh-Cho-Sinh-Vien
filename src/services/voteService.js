@@ -8,7 +8,7 @@ const Vote_Post = require('../models/Vote_Post');
 const { handleGetUserFollowByPost } = require('./followService');
 const { handleNotifyForUserFollowingPost, handleNotifyForAuthorPost } = require('./notificationService');
 const { handleGetPostType } = require('./postService');
-const { handleIncreaseReputationForAuthorPost, handleDecreaseReputationForAuthorPost } = require('./userService');
+const { handleIncreaseReputationForAuthorPost, handleDecreaseReputationForAuthorPost, handleDecreaseReputationForUser, handleIncreaseReputationForUser } = require('./userService');
 
 const handleGetNumberVoteForPost = async (idPost) => {
     let [results, fields] = await connection.query(`select * from vote_post where post_id = ${idPost};`);
@@ -26,60 +26,67 @@ const handleGetNumberVoteForPost = async (idPost) => {
 
 const handleIncreaseVoteForPost = async (idPost, idUser, idVoteType) => {
     try {
-        const user = await User.findOne({
-            where: {
-                id: idUser,
-            },
-        });
-        if (user.reputation <= 5) {
+        const dataDecreaseReputationUser = await handleDecreaseReputationForUser(idUser, 5)
+        if (dataDecreaseReputationUser.EC !== 0) {
             return {
                 EC: -2,
-                EM: "Bạn không đủ điểm danh tiếng để tăng bình chọn",
+                EM: dataDecreaseReputationUser.EM,
             };
         }
-        else {
-            user.reputation -= 5;
-            await user.save();
 
-            await Vote_Post.create({
-                post_id: idPost,
-                vote_type_id: idVoteType,
-                user_id: idUser
-            });
-            const dataIncreaseReputationAuthorPost = await handleIncreaseReputationForAuthorPost(idPost, 10);
-            if (dataIncreaseReputationAuthorPost?.EC === 0) {
-                const dataNotifyAuthorPost = await handleNotifyForAuthorPost(idPost, "Bình chọn", "tăng bình chọn");
-                console.log('dataNotifyAuthorPost', dataNotifyAuthorPost);
+        await Vote_Post.create({
+            post_id: idPost,
+            vote_type_id: idVoteType,
+            user_id: idUser
+        });
 
-                if (dataNotifyAuthorPost?.EC === 0) {
-                    const dataNotifyUserFollowingPost = await handleNotifyForUserFollowingPost(idPost, +idUser, 'Bình chọn', 'tăng bình chọn');
-                    if (dataNotifyUserFollowingPost?.EC === 0) {
-                        return {
-                            EC: 0,
-                            EM: "Increase vote for post succeed",
-                        };
-                    }
-                    else {
-                        return {
-                            EC: 3,
-                            EM: dataNotifyUserFollowingPost.EM,
-                        };
-                    }
+        const dataPostType = await handleGetPostType(idPost);
+        if (dataPostType?.EC !== 0) {
+            return {
+                EC: 5,
+                EM: dataPostType.EM,
+            };
+        }
+        const postType = dataPostType.DT.post_type_id === 1 ? "câu hỏi" : "câu trả lời"
+        const idQuestion = dataPostType.DT.post_type_id === 1 ? idPost : dataPostType.DT.parent_question_id
+        const idAnswer = dataPostType.DT.post_type_id === 1 ? null : idPost;
+
+        const dataIncreaseReputationAuthorPost = await handleIncreaseReputationForAuthorPost(idPost, 10);
+        if (dataIncreaseReputationAuthorPost?.EC === 0) {
+            const dataNotifyAuthorPost = await handleNotifyForAuthorPost(idPost, "Bình chọn",
+                `${postType.charAt(0).toUpperCase() + postType.slice(1)} của bạn đã có người bình chọn tăng, +10 điểm danh tiếng`,
+                `/questions/${idQuestion}`, idAnswer);
+
+            if (dataNotifyAuthorPost?.EC === 0) {
+                const dataNotifyUserFollowingPost = await handleNotifyForUserFollowingPost(idPost, +idUser, 'Bình chọn',
+                    `${postType.charAt(0).toUpperCase() + postType.slice(1)} bạn theo dõi đã có người bình chọn tăng`,
+                    `/questions/${idQuestion}`, idAnswer);
+                if (dataNotifyUserFollowingPost?.EC === 0) {
+                    return {
+                        EC: 0,
+                        EM: "Increase vote for post succeed",
+                    };
                 }
                 else {
                     return {
-                        EC: 4,
-                        EM: dataNotifyAuthorPost.EM,
+                        EC: 3,
+                        EM: dataNotifyUserFollowingPost.EM,
                     };
                 }
-
             }
             else {
                 return {
-                    EC: 3,
-                    EM: dataIncreaseReputationAuthorPost.EM,
+                    EC: 4,
+                    EM: dataNotifyAuthorPost.EM,
                 };
             }
+
+        }
+        else {
+            return {
+                EC: 3,
+                EM: dataIncreaseReputationAuthorPost.EM,
+            };
         }
     } catch (error) {
         return {
@@ -92,17 +99,18 @@ const handleIncreaseVoteForPost = async (idPost, idUser, idVoteType) => {
 const handleUnvoteForPost = async (idPost, idUser, voteType) => {
     try {
         await connection.query(`DELETE FROM vote_post WHERE post_id = ${idPost} and user_id = ${idUser}`);
-        const user = await User.findOne({
-            where: {
-                id: idUser,
-            },
-        });
-        user.reputation += 5;
-        await user.save();
+
+        const dataIncreaseReputationUser = await handleIncreaseReputationForUser(idUser, 5);
+        if (dataIncreaseReputationUser.EC !== 0) {
+            return {
+                EC: 3,
+                EM: dataIncreaseReputationUser.EM,
+            }
+        }
+
         if (voteType === 1) {
             const dataDecreaseReputationAuthorPost = await handleDecreaseReputationForAuthorPost(idPost, 10);
             if (dataDecreaseReputationAuthorPost?.EC !== 0) {
-
                 return {
                     EC: 2,
                     EM: dataDecreaseReputationAuthorPost.EM,
@@ -142,58 +150,65 @@ const handleGetVoteTypeForPost = async (idPost, idUser) => {
 
 const handleDecreaseVoteForPost = async (idPost, idUser, idVoteType) => {
     try {
-        const user = await User.findOne({
-            where: {
-                id: idUser,
-            },
-        });
-        if (user.reputation <= 5) {
+        const dataDecreaseReputationUser = await handleDecreaseReputationForUser(idUser, 5)
+        if (dataDecreaseReputationUser.EC !== 0) {
             return {
                 EC: -2,
-                EM: "Bạn không đủ điểm danh tiếng để giảm bình chọn",
+                EM: dataDecreaseReputationUser.EM,
             };
         }
-        else {
-            user.reputation -= 5;
-            await user.save();
 
-            await Vote_Post.create({
-                post_id: idPost,
-                vote_type_id: idVoteType,
-                user_id: idUser
-            });
+        await Vote_Post.create({
+            post_id: idPost,
+            vote_type_id: idVoteType,
+            user_id: idUser
+        });
 
-            const dataDecreaseReputationAuthorPost = await handleDecreaseReputationForAuthorPost(idPost, 5);
-            if (dataDecreaseReputationAuthorPost?.EC === 0) {
-                const dataNotifyAuthorPost = await handleNotifyForAuthorPost(idPost, "Bình chọn", "giảm bình chọn");
-                if (dataNotifyAuthorPost?.EC === 0) {
-                    const dataNotifyUserFollowingPost = await handleNotifyForUserFollowingPost(idPost, +idUser, 'Bình chọn', 'giảm bình chọn');
-                    if (dataNotifyUserFollowingPost?.EC === 0) {
-                        return {
-                            EC: 0,
-                            EM: "Decrease vote for post succeed",
-                        };
-                    }
-                    else {
-                        return {
-                            EC: 3,
-                            EM: dataNotifyUserFollowingPost.EM,
-                        };
-                    }
+        const dataPostType = await handleGetPostType(idPost);
+        if (dataPostType?.EC !== 0) {
+            return {
+                EC: 5,
+                EM: dataPostType.EM,
+            };
+        }
+        const postType = dataPostType.DT.post_type_id === 1 ? "câu hỏi" : "câu trả lời"
+        const idQuestion = dataPostType.DT.post_type_id === 1 ? idPost : dataPostType.DT.parent_question_id
+        const idAnswer = dataPostType.DT.post_type_id === 1 ? null : idPost;
+
+        const dataDecreaseReputationAuthorPost = await handleDecreaseReputationForAuthorPost(idPost, 5);
+        if (dataDecreaseReputationAuthorPost?.EC === 0) {
+            const dataNotifyAuthorPost = await handleNotifyForAuthorPost(idPost, "Bình chọn",
+                `${postType.charAt(0).toUpperCase() + postType.slice(1)} của bạn đã có người bình chọn giảm, -5 điểm danh tiếng`,
+                `/questions/${idQuestion}`, idAnswer);
+            if (dataNotifyAuthorPost?.EC === 0) {
+                const dataNotifyUserFollowingPost = await handleNotifyForUserFollowingPost(idPost, +idUser, 'Bình chọn',
+                    `${postType.charAt(0).toUpperCase() + postType.slice(1)} bạn theo dõi đã có người bình chọn giảm`,
+                    `/questions/${idQuestion}`, idAnswer);
+                if (dataNotifyUserFollowingPost?.EC === 0) {
+                    return {
+                        EC: 0,
+                        EM: "Decrease vote for post succeed",
+                    };
                 }
                 else {
                     return {
-                        EC: 4,
-                        EM: dataNotifyAuthorPost.EM,
+                        EC: 3,
+                        EM: dataNotifyUserFollowingPost.EM,
                     };
                 }
             }
             else {
                 return {
-                    EC: 3,
-                    EM: dataDecreaseReputationAuthorPost.EM,
+                    EC: 4,
+                    EM: dataNotifyAuthorPost.EM,
                 };
             }
+        }
+        else {
+            return {
+                EC: 3,
+                EM: dataDecreaseReputationAuthorPost.EM,
+            };
         }
     } catch (error) {
         return {
@@ -275,7 +290,7 @@ const handleUpVoteForPost = async (idPost, idUser) => {
         const dataVoteTypePost = await handleGetVoteTypeForPost(idPost, idUser)
         if (dataVoteTypePost?.EC === 0) {
             if (dataVoteTypePost.DT === 1) {
-                const dataUnvotePost = await handleUnvoteForPost(idPost, idUser)
+                const dataUnvotePost = await handleUnvoteForPost(idPost, idUser, dataVoteTypePost.DT)
                 if (dataUnvotePost?.EC !== 0) {
                     return {
                         EC: 2,
@@ -287,18 +302,18 @@ const handleUpVoteForPost = async (idPost, idUser) => {
                 const dataIncreaseVotePost = await handleIncreaseVoteForPost(idPost, idUser, 1)
                 if (dataIncreaseVotePost?.EC !== 0) {
                     return {
-                        EC: 3,
+                        EC: -2,
                         EM: dataIncreaseVotePost.EM,
                     }
                 }
             }
             else if (dataVoteTypePost.DT === 2) {
-                const dataUnvotePost = await handleUnvoteForPost(idPost, idUser)
+                const dataUnvotePost = await handleUnvoteForPost(idPost, idUser, dataVoteTypePost.DT)
                 if (dataUnvotePost?.EC === 0) {
                     const dataIncreaseVotePost = await handleIncreaseVoteForPost(idPost, idUser, 1)
                     if (dataIncreaseVotePost?.EC !== 0) {
                         return {
-                            EC: 6,
+                            EC: -2,
                             EM: dataIncreaseVotePost.EM,
                         }
                     }
@@ -346,7 +361,7 @@ const handleDownVoteForPost = async (idPost, idUser) => {
                 const dataDecreaseVotePost = await handleDecreaseVoteForPost(idPost, idUser, 2)
                 if (dataDecreaseVotePost?.EC !== 0) {
                     return {
-                        EC: 3,
+                        EC: -2,
                         EM: dataDecreaseVotePost.EM,
                     }
                 }
@@ -357,7 +372,7 @@ const handleDownVoteForPost = async (idPost, idUser) => {
                     const dataDecreaseVotePost = await handleDecreaseVoteForPost(idPost, idUser, 2)
                     if (dataDecreaseVotePost?.EC !== 0) {
                         return {
-                            EC: 6,
+                            EC: -2,
                             EM: dataDecreaseVotePost.EM,
                         }
                     }

@@ -1,4 +1,6 @@
 const { handleGetNumberAnswers, handleGetListAnswers, handleCreateAnswer, handleGetListAnswersPagination, handleAcceptAnswer, handleDeleteAnswersForQuestion, handleUnacceptedAnswer, handleGetAnswer, handleGetPageNumberByAnswer, handleGetAmountAnswersByUser, handleGetAnswersByUser, handleGetAnswersByUserPagination, handleGetAnswers, handleGetAnswersPagination, handleUpdateAnswer } = require("../services/answerService");
+const cloudinary = require("../config/cloudinary");
+const pLimit = require("p-limit");
 
 const getNumberAnswers = async (req, res) => {
     let idQuestion = req.params.idquestion;
@@ -32,22 +34,33 @@ const getAnswer = async (req, res) => {
 
 const createAnswer = async (req, res) => {
     if (req?.files && req.files.length > 0) {
-        req.files.map((file) => {
-            if (!file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF)$/)) {
+        for (const file of req.files) {
+            if (!file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF|webp|WEBP)$/)) {
                 return res.status(200).json({
                     EC: 1,
                     EM: 'Only image files (jpg, jpeg, png) are allowed!'
                 });
             };
-        })
+        }
     }
 
-    let images = null;
-    if (req?.files && req.files.length > 0) {
-        images = req.files.map((file) => {
-            return file.filename;
+    // let images = null;
+    // if (req?.files && req.files.length > 0) {
+    //     images = req.files.map((file) => {
+    //         return file.filename;
+    //     })
+    // }
+
+    const limit = pLimit(5);
+    const imagesToUpload = req.files.map((file) => {
+        return limit(async () => {
+            const result = await cloudinary.uploader.upload(file.path);
+            return result;
         })
-    }
+    })
+
+    const uploads = await Promise.all(imagesToUpload);
+    const images = uploads.map(image => image.secure_url);
 
     const { idUser, idQuestion, contentAnswer, contentPlainAnswer } = req.body;
     const data = await handleCreateAnswer(+idUser, idQuestion, 2, contentAnswer, contentPlainAnswer, images);
@@ -74,22 +87,33 @@ const unacceptedAnswer = async (req, res) => {
 
 const updateAnswer = async (req, res) => {
     if (req?.files && req.files.length > 0) {
-        req.files.map((file) => {
-            if (!file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF)$/)) {
+        for (const file of req.files) {
+            if (!file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF|webp|WEBP)$/)) {
                 return res.status(200).json({
-                    EC: 2,
+                    EC: 1,
                     EM: 'Only image files (jpg, jpeg, png) are allowed!'
                 });
             };
-        })
+        }
     }
 
-    let images = null;
-    if (req?.files && req.files.length > 0) {
-        images = req.files.map((file) => {
-            return file.filename;
+    // let images = null;
+    // if (req?.files && req.files.length > 0) {
+    //     images = req.files.map((file) => {
+    //         return file.filename;
+    //     })
+    // }
+
+    const limit = pLimit(5);
+    const imagesToUpload = req.files.map((file) => {
+        return limit(async () => {
+            const result = await cloudinary.uploader.upload(file.path);
+            return result;
         })
-    }
+    })
+
+    const uploads = await Promise.all(imagesToUpload);
+    const images = uploads.map(image => image.secure_url);
 
     const { idAnswer, postDetail, postStatus, postPlainDetail } = req.body;
     const data = await handleUpdateAnswer(idAnswer, postDetail, postStatus, postPlainDetail, images);
