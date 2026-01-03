@@ -3,6 +3,7 @@ const Notification = require("../models/Notification");
 const { handleGetPostType } = require("./postService");
 const { handleGetUserFollowByPost } = require("./followService");
 const Post = require("../models/Post");
+const { getIO } = require("../config/socket");
 
 const handleGetListNotificationByUser = async (idUser, unRead) => {
     try {
@@ -161,6 +162,10 @@ const handleNotifyForUser = async (idUser, notificationType, notificationSummary
             notification_resource: notificationResource,
             id_target_answer: idTargetAnswer,
         });
+
+        const io = getIO();
+        io.to(`user_${idUser}`).emit("new_notification", true);
+
         return {
             EC: 0,
             EM: "Notify for user succeed",
@@ -191,6 +196,10 @@ const handleNotifyForUserFollowingPost = async (idPost, idUser, notificationType
                         }
                     })
             await Notification.bulkCreate(notifications);
+            const io = getIO();
+            notifications?.length > 0 && notifications.map((notification) => {
+                io.to(`user_${notification.belonged_by_user_id}`).emit("new_notification", true);
+            })
             return {
                 EC: 0,
                 EM: "Notify for user following post succeed",

@@ -20,8 +20,11 @@ const apiFollowRoutes = require('./routes/apiFollow');
 const apiPrivilegeRoutes = require('./routes/apiPrivilege');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const http = require('http');
 const { modalDataPostType, modalDataUser, modalDataTag, modalDataVoteType, modalDataComment, modalDataRole, modalDataNotification, modalDataPrivilege, modalDataUserPrivilege } = require('./sequelize/modalData');
 const modelSync = require('./sequelize/modelSync');
+const sequelize = require('./config/connectDB');
+const { initSocket } = require('./config/socket');
 
 const app = express()
 const port = process.env.PORT || 8888;
@@ -47,6 +50,11 @@ configViewEngine(app);
 //config static files
 configStaticFiles(app);
 
+// Create an HTTP server using the Express app
+const server = http.createServer(app);
+
+initSocket(server);
+
 //Khai báo api
 app.use('/api/v1/', apiAuthRoutes);
 app.use('/api/v1/', apiVoteRoutes);
@@ -65,6 +73,6 @@ app.use('/api/v1/', apiItemSaveRoutes);
 app.use('/api/v1/', apiFollowRoutes);
 app.use('/api/v1/', apiPrivilegeRoutes);
 
-app.listen(port, hostname, () => {
-    console.log(`Example app listening on port ${port}`)
-})
+server.listen(port, hostname, () => {
+    console.log(`Server is running on port ${port}`);
+});
